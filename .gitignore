@@ -16,7 +16,7 @@
 # production
 /build
 
-./client/dist
+
 ./dist
 dist
 /dist
