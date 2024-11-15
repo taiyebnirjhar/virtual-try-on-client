@@ -9,10 +9,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { programmingGarments } from "@/data/garments";
+import exampleHumans from "@/data/human";
 import { motion } from "framer-motion";
-import { Clock, Download, Sparkles, Upload } from "lucide-react";
+import {
+  Clock,
+  Download,
+  MousePointerClick,
+  RotateCcw,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import GPUQuotaCountdown, { setGPUTimeout } from "./gpu-quota-count-down";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -101,44 +111,6 @@ export default function VirtualTryOn() {
     }
   };
 
-  // const handleTryOn = async () => {
-  //   if (humanFile && garmentFile) {
-  //     setIsProcessing(true);
-  //     setTimer(0);
-
-  //     try {
-  //       const formData = new FormData();
-  //       formData.append("human", humanFile);
-  //       formData.append("garment", garmentFile);
-
-  //       const response = await fetch(
-  //         "http://localhost:3050/api/virtual-tryon",
-  //         {
-  //           method: "POST",
-  //           body: formData,
-  //         }
-  //       );
-
-  //       const responseData = await response.json();
-
-  //       console.log("Response data:", responseData);
-
-  //       if (responseData?.success === false) {
-  //         toast.error(responseData.error || "Error during virtual try-on");
-  //         setIsProcessing(false);
-  //         return;
-  //       }
-  //       const { data } = responseData;
-  //       setOutputImage(data?.outputImage?.url);
-  //       setIsProcessing(false);
-  //     } catch (error) {
-  //       console.error("Error during virtual try-on:", error);
-  //       toast.error(error.error || "Error during virtual try-on");
-  //       setIsProcessing(false);
-  //     }
-  //   }
-  // };
-
   const handleTryOn = async () => {
     // Validate input files first
     if (!humanFile || !garmentFile) {
@@ -159,24 +131,23 @@ export default function VirtualTryOn() {
         body: formData,
       });
 
-      // Handle non-200 HTTP responses
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const responseData = await response.json();
-      console.log("Response data:", responseData);
 
       // Handle specific error cases
-      if (!responseData.success) {
+      if (responseData.success === false) {
         let errorMessage = "Error during virtual try-on";
 
         // Handle GPU quota exceeded error
         if (responseData.error?.includes("exceeded your GPU quota")) {
-          const timeLeft = responseData.error.match(/\d+:\d+:\d+/)?.[0] || "";
-          errorMessage = `GPU quota exceeded. Please try again in ${
-            timeLeft || "a few minutes"
-          }`;
+          const timeLeft = responseData.error.match(/\d+:\d+:\d+/)?.[0];
+          if (timeLeft) {
+            // Save the timeout to localStorage
+            setGPUTimeout(timeLeft);
+            errorMessage = `GPU quota exceeded. Please try again in ${timeLeft}`;
+          } else {
+            errorMessage =
+              "GPU quota exceeded. Please try again in a few minutes";
+          }
         }
         // Handle other specific error cases
         else if (responseData.error) {
@@ -236,21 +207,24 @@ export default function VirtualTryOn() {
     document.body.removeChild(link);
   };
 
-  const exampleHumans = [
-    "/assets/human/maleOne.png",
-    "/assets/human/maleTwo.png",
-    "/assets/human/femaleOne.png",
-    "/assets/human/femaleTwo.png",
-  ];
-  const exampleGarments = [
-    "/assets/garment/maleDressOne.png",
-    "/assets/garment/maleDressTwo.png",
-    "/assets/garment/femaleDressOne.png",
-    "/assets/garment/femaleDressTwo.png",
-  ];
+  const handleReset = () => {
+    // Reset all image and file states to null
+    setHumanImage(null);
+    setHumanFile(null);
+    setGarmentImage(null);
+    setGarmentFile(null);
+    setOutputImage(null);
+
+    // Reset processing state to false
+    setIsProcessing(false);
+
+    // Reset timer to 0
+    setTimer(0);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8">
+      <GPUQuotaCountdown />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -366,13 +340,13 @@ export default function VirtualTryOn() {
                 }
                 className="mb-4 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600"
               />
-              <div className="flex flex-wrap gap-3">
-                {exampleGarments.map((src, index) => (
+              <div className="flex flex-wrap gap-3 items-center justify-center">
+                {programmingGarments.map((src, index) => (
                   <motion.img
                     key={index}
                     src={src}
                     alt={`Example garment ${index + 1}`}
-                    className="w-auto h-24 object-cover cursor-pointer rounded-md"
+                    className="w-auto h-24 object-cover cursor-pointer rounded-md flex-1"
                     onClick={() =>
                       handleExampleClick(
                         src,
@@ -435,14 +409,22 @@ export default function VirtualTryOn() {
         <motion.div
           //   whileHover={{ scale: 1.05 }}
           //   whileTap={{ scale: 0.95 }}
-          className="mt-8"
+          className="mt-8 space-y-4"
         >
           <Button
             onClick={handleTryOn}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-lg py-6 rounded-xl shadow-lg"
             disabled={!humanImage || !garmentImage || isProcessing}
           >
+            <MousePointerClick className="mr-2" />
             {isProcessing ? "Processing..." : "Try On"}
+          </Button>
+          <Button
+            onClick={handleReset}
+            className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-lg py-6 rounded-xl shadow-lg"
+            disabled={!humanImage || !garmentImage || isProcessing}
+          >
+            <RotateCcw className="mr-2" /> Reset
           </Button>
         </motion.div>
       </motion.div>
