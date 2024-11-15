@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import GPUQuotaCountdown, { setGPUTimeout } from "./gpu-quota-count-down";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export default function VirtualTryOn() {
   const [humanImage, setHumanImage] = useState<string | null>(null);
   const [humanFile, setHumanFile] = useState<File | null>(null);
@@ -126,7 +126,7 @@ export default function VirtualTryOn() {
       formData.append("human", humanFile);
       formData.append("garment", garmentFile);
 
-      const response = await fetch("http://localhost:3050/api/virtual-tryon", {
+      const response = await fetch(API_URL, {
         method: "POST",
         body: formData,
       });
