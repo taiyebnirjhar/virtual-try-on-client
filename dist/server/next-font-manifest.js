@@ -1,0 +1,1 @@
+self.__NEXT_FONT_MANIFEST="{\"pages\":{},\"app\":{\"/home/taiyebnirjhor/Documents/Development/virtual-try-on/client/app/layout\":[\"static/media/a34f9d1faa5f3315-s.p.woff2\"],\"/home/taiyebnirjhor/Documents/Development/virtual-try-on/client/app/(home)/layout\":[\"static/media/a34f9d1faa5f3315-s.p.woff2\"]},\"appUsingSizeAdjust\":true,\"pagesUsingSizeAdjust\":false}"
