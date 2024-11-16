@@ -25,7 +25,9 @@ import { toast } from "sonner";
 import GPUQuotaCountdown, { setGPUTimeout } from "./gpu-quota-count-down";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const API_URL = "https://virtual-try-on-server.onrender.com/api/virtual-tryon";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://virtual-try-on-server.onrender.com/api/virtual-tryon";
 export default function VirtualTryOn() {
   const [humanImage, setHumanImage] = useState<string | null>(null);
   const [humanFile, setHumanFile] = useState<File | null>(null);
