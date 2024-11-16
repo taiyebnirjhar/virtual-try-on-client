@@ -5,16 +5,6 @@ const nextConfig = {
   images: { unoptimized: true },
   reactStrictMode: false,
   trailingSlash: true,
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        "fs/promises": false,
-      };
-    }
-    return config;
-  },
 };
 
 export default nextConfig;
